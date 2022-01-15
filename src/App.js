@@ -1,23 +1,27 @@
-import logo from './logo.svg';
-import './App.css';
-
+import React, { useState } from "react";
+import LoginForm from "./components/LoginForm";
+import Footer from "./components/Footer";
 function App() {
+  const adminUser = {
+    login: '12',
+    password: '123456'
+  }
+  const [user, setUser] = useState({ login: "", password: "" });
+  const [error, serError] = useState("");
+  const Login = details => {
+    if (adminUser.login == details.login && adminUser.password == details.password) {
+      console.log('successful login')
+    }
+
+    console.log(details);
+  }
+  const Logout = () => {
+    console.log('logout');
+  }
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <LoginForm Login={Login} error={error} />
+      <Footer />
     </div>
   );
 }
