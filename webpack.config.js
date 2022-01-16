@@ -4,7 +4,7 @@ const HTMLWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
     mode: "development",
-    entry: "./src/index.js",
+    entry: ["./src/index.jsx", "@babel/polyfill"],
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "[name].[hash].js"
@@ -13,28 +13,40 @@ module.exports = {
         new HTMLWebpackPlugin({ template: "./public/index.html" }),
         new CleanWebpackPlugin()
     ],
-    devServer:{
-        port:3002
+    devServer: {
+        port: 3002
     },
     module: {
-      rules: [
-        {
-          test: /\.css$/,
-          use: [
-            // [style-loader](/loaders/style-loader)
-            { loader: 'style-loader' },
-            // [css-loader](/loaders/css-loader)
+        rules: [
             {
-              loader: 'css-loader',
-              options: {
-                modules: true
-              }
+                test: /\.jsx$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: "babel-loader",
+                    options: {
+                        presets: ['@babel/preset-env', "@babel/preset-react"]
+                    }
+                }
             },
-            // [sass-loader](/loaders/sass-loader)
-            { loader: 'sass-loader' }
-          ]
-        }
-      ]
+            {
+                test: /\.(jpg|jpeg|png|svg)/,
+                use: ['file-loader']
+            }, {
+                test: /\.css$/,
+                use: [
+                    // [style-loader](/loaders/style-loader)
+                    { loader: 'style-loader' },
+                    // [css-loader](/loaders/css-loader)
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            modules: true
+                        }
+                    },
+                    // [sass-loader](/loaders/sass-loader)
+                    { loader: 'sass-loader' }
+                ]
+            }
+        ]
     }
-  };
-  
+};

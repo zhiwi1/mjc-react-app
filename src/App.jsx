@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import LoginForm from "./component/LoginForm";
-import Footer from "./component/Footer";
+import LoginForm from "./component/LoginForm.jsx";
+import Footer from "./component/Footer.jsx";
 function App() {
   const adminUser = {
     login: '12',
