@@ -14,8 +14,12 @@ module.exports = {
         new CleanWebpackPlugin()
     ],
     devServer: {
-        port: 3002
+        port: 3002,
+        historyApiFallback: true
     },
+    resolve: {
+        extensions: ['.js', '.jsx'],
+      },
     module: {
         rules: [
             {
