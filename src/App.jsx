@@ -30,6 +30,7 @@
 import React from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import {setCount} from "../src/reducers/reposReducer";
+import {BrowserRouter, Route, Switch, Redirect} from "react-router-dom";
 const App = () => {
     const dispatch = useDispatch()
     const count = useSelector(state => state.repos.count)
@@ -39,10 +40,19 @@ const App = () => {
     }
 
     return (
-        <div className="app">
-            <button onClick={()=>onCountClick()}>COUNT</button>
-            <div>{count}</div>
-        </div>
+      <BrowserRouter>
+      <div className="container">
+          <Switch>
+               <Route exact path="/" component={Main}/>
+               <Route path="/card" component={Card}/>
+               <Redirect to="/"/>
+          </Switch>
+      </div>
+  </BrowserRouter>
+        // <div className="app">
+        //     <button onClick={()=>onCountClick()}>COUNT</button>
+        //     <div>{count}</div>
+        // </div>
     );
 };
 
