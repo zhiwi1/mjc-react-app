@@ -19,7 +19,7 @@ export default class Secured extends Component {
 
   }
   render() {
-    if (this.state.keycloak) {
+    if (this.state.Keycloak) {
       if (this.state.authenticated) return (
         <div>
           <p>This is a Keycloak-secured component of your application</p>
