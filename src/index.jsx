@@ -7,8 +7,8 @@ import {Provider} from "react-redux";
 import {store} from "./reducers";
 
 ReactDOM.render(
-    <Provider store={store}>
+  //  <Provider store={store}>
         <App/>
-    </Provider>,
+   ,// </Provider>,
     document.getElementById("root")
 )

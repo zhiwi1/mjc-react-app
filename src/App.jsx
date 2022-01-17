@@ -30,25 +30,27 @@
 import React from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import {setCount} from "../src/reducers/reposReducer";
+import {Secured} from "../src/components/security/Secured"
 import {BrowserRouter, Route, Switch, Redirect} from "react-router-dom";
 const App = () => {
-    const dispatch = useDispatch()
-    const count = useSelector(state => state.repos.count)
+    // const dispatch = useDispatch()
+    // const count = useSelector(state => state.repos.count)
 
-    function onCountClick() {
-        dispatch(setCount(5))
-    }
+    // function onCountClick() {
+    //     dispatch(setCount(5))
+    // }
 
     return (
-      <BrowserRouter>
-      <div className="container">
-          <Switch>
-               <Route exact path="/" component={Main}/>
-               <Route path="/card" component={Card}/>
-               <Redirect to="/"/>
-          </Switch>
-      </div>
-  </BrowserRouter>
+<Secured/>
+//       <BrowserRouter>
+//       <div className="container">
+//        <Switch>
+//                <Route exact path="/" component={Main}/>
+//            <Route path="/card" component={Card}/>
+//                <Redirect to="/"/>
+//           </Switch>
+//       </div>
+//  </BrowserRouter>
         // <div className="app">
         //     <button onClick={()=>onCountClick()}>COUNT</button>
         //     <div>{count}</div>
