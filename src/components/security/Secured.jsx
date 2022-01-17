@@ -7,8 +7,12 @@ export const Secured =() => {
 
   // Аналогично componentDidMount и componentDidUpdate:
   useEffect(() => {
+    console.log('im hereeeeeeeeeeeeeeeeeee1');
     const keycloak = Keycloak("keycloak.json");
+    console.log('im hereeeeeeeeeeeeeeeeeee2');
     keycloak.init({ onLoad: "login-required" }).then((authenticated) => {
+      console.log(authenticated);
+      console.log('im hereeeeeeeeeeeeeeeeeee');
       setKeycloak(keycloak);
       setAuthenticated(authenticated);
   //    this.setState({ keycloak: keycloak, authenticated: authenticated });
@@ -17,7 +21,7 @@ export const Secured =() => {
         console.log(keycloak.token);
       }
     });
-  });
+  },[]);
    if (keycloak) {
     if (authenticated) return (
       <div>
