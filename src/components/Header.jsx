@@ -1,4 +1,4 @@
-import React ,{ useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Link, Stack, Typography } from "@mui/material";
 
 import Keycloak from "keycloak-js";
@@ -10,7 +10,7 @@ export default function Header() {
     useEffect(() => {
         const keycloak = Keycloak("keycloak.json");
         keycloak.init({ onLoad: "check-sso" }).then((authenticated) => {
-            setDetails({...details, keycloak: keycloak, authenticated: authenticated })
+            setDetails({ ...details, keycloak: keycloak, authenticated: authenticated })
             if (authenticated) {
                 window.localStorage.setItem("accessToken", keycloak.token);
             }
@@ -31,17 +31,12 @@ export default function Header() {
                     justifyContent="flex-start"
                     direction="row"
                     alignItems="center"
-                                       ml={2}
+                    ml={2}
                 >
                     <Typography variant="h5" color="white">
                         LOGO
                     </Typography>
-                    {/* <CertificateModal
-              buttonText="Add new"
-              title="Add Certificate"
-              type="create"
-              //   certificate={{ name: "Hello" }}
-            /> */}
+                   
                 </Stack>
                 {details.authenticated ? (
                     <Stack
@@ -59,7 +54,8 @@ export default function Header() {
                                 color="inherit"
                                 underline="hover"
                                 onClick={() => {
-                                    setDetails({...details,
+                                    setDetails({
+                                        ...details,
                                         authenticated: false,
                                     });
                                     window.localStorage.removeItem("accessToken");
@@ -84,7 +80,8 @@ export default function Header() {
                                 underline="hover"
                                 onClick={() => {
                                     details.keycloak.login().then((authenticated) => {
-                                        setDetails({...details,
+                                        setDetails({
+                                            ...details,
                                             authenticated: authenticated,
                                         });
                                         if (authenticated) {

@@ -4,12 +4,16 @@ const HTMLWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
     mode: "development",
-    entry: ["./src/index.jsx", "@babel/polyfill"],
+   // entry: ["./index.jsx", "@babel/polyfill"],
+    entry: {
+        index: ['babel-polyfill', './src/index.jsx']
+    },
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "[name].[hash].js"
     },
     plugins: [
+        
         new HTMLWebpackPlugin({ template: "./public/index.html" }),
         new CleanWebpackPlugin()
     ],
@@ -28,7 +32,7 @@ module.exports = {
                 use: {
                     loader: "babel-loader",
                     options: {
-                        presets: ['@babel/preset-env', "@babel/preset-react"]
+                        presets: ['@babel/preset-env', "@babel/preset-react" ]
                     }
                 }
             },
