@@ -1,7 +1,7 @@
-import React, {  useState ,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Keycloak from "keycloak-js";
 
-export const Secured =() => {
+export const Secured = () => {
   const [keycloak, setKeycloak] = useState(null);
   const [authenticated, setAuthenticated] = useState(false)
 
@@ -15,14 +15,14 @@ export const Secured =() => {
       console.log('im hereeeeeeeeeeeeeeeeeee');
       setKeycloak(keycloak);
       setAuthenticated(authenticated);
-  //    this.setState({ keycloak: keycloak, authenticated: authenticated });
+      //    this.setState({ keycloak: keycloak, authenticated: authenticated });
       if (authenticated) {
         window.localStorage.setItem("accessToken", keycloak.token);
         console.log(keycloak.token);
       }
     });
-  },[]);
-   if (keycloak) {
+  }, []);
+  if (keycloak) {
     if (authenticated) return (
       <div>
         <p>This is a Keycloak-secured component of your application</p>

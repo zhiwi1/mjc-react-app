@@ -1,9 +1,12 @@
-import React from 'react'
+import { Box, Typography } from "@mui/material";
+import React from "react";
 
-function Footer() {
+export default function Footer() {
     return (
-        <div></div>
-    )
-}
-
-export default Footer
+      <Box sx={{  bgcolor: "#013220",height: 40 }}>
+        <Typography variant="h5" color="white" textAlign="center">
+          Ivan Zhyuliuk, 2022
+        </Typography>
+      </Box>
+    );
+  }

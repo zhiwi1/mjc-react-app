@@ -1,3 +1,13 @@
+
+import ReactDOM from "react-dom";
+import "./index.css";
+import React from "react";
+import {NotFound}  from "../src/components/NotFound"
+import {BrowserRouter, Route, Routes, Redirect} from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import store from "./reducers";
+import { Provider } from "react-redux";
 // import React, { useState } from "react";
 // import LoginForm from "./components/LoginForm";
 // import Footer from "./components/Footer";
@@ -27,11 +37,7 @@
 // }
 
 // export default App;
-import React from 'react';
-import {useDispatch, useSelector} from "react-redux";
-import {setCount} from "../src/reducers/reposReducer";
-import {Secured} from "../src/components/security/Secured"
-import {BrowserRouter, Route, Switch, Redirect} from "react-router-dom";
+
 const App = () => {
     // const dispatch = useDispatch()
     // const count = useSelector(state => state.repos.count)
@@ -41,7 +47,23 @@ const App = () => {
     // }
 
     return (
-<Secured/>
+<React.StrictMode>
+    {/* <Provider store={store}> */}
+      <BrowserRouter>
+        <Header />
+        <Routes>
+          <Route path="/login" element={<div>Hello</div>}>
+            {/* <div>Hello</div> */}
+          </Route>
+          <Route path="/" element={<div>App</div>}>
+            {/* <App /> */}
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Footer />
+      </BrowserRouter>
+    {/* </Provider> */}
+  </React.StrictMode>
 //       <BrowserRouter>
 //       <div className="container">
 //        <Switch>
