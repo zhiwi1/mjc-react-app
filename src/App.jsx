@@ -11,7 +11,7 @@ import { StyledEngineProvider } from '@mui/material/styles';
 import store from "./reducers";
 import { Provider } from "react-redux";
 import axiosInstance from "./components/security/requestInterceptor";
-import axios from "axios";
+
 // import React, { useState } from "react";
 // import LoginForm from "./components/LoginForm";
 // import Footer from "./components/Footer";
@@ -49,13 +49,7 @@ const App = () => {
     // function onCountClick() {
     //     dispatch(setCount(5))
     // }
-    try {
-      console.log(findAllCertificates(0,19));
-  }
-  catch (err) {
-      console.log(err);
-  }
-
+    
     return (
 <React.StrictMode>
     {/* <Provider store={store}> */}
@@ -94,23 +88,5 @@ const App = () => {
 
 export default App;
 
-function isEmpty(str) {
-  return (!str || str.length === 0);
-}
-async function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
-    let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
 
-    if (!isEmpty(name)) {
-        apiUrl += `&name=${name}`
-    }
-    if (!isEmpty(description)) {
-        apiUrl += `&description=${description}`
-    }
-    if (!isEmpty(tagNames)) {
-        apiUrl += `&tagNames=${tagNames}`
-    }
-    return await axios.get(apiUrl)
     
-    
-    
-}
