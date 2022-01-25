@@ -22,17 +22,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import { findAllCertificates } from "./CertificateRequest"
-const rows=[];
-const loadCertificates = async () => {
-    try {
-        const response = await findAllCertificates(0, 5);
-        showCertificates(response);
-    } catch (error) {
-        console.log(error.message);
-    }
+const rows = [];
+const loadCertificates = () => {
+    const response = findAllCertificates(0, 5);
+    console.log(response);
+    showCertificates(response);
+
 }
 const showCertificates = (certificates) => {
-    
+
     certificates.forEach((certificate) => {
 
         const row = createData(certificate.name, certificate.create_date, certificate.description, certificate.description, certificate.price);
@@ -261,11 +259,13 @@ export default function EnhancedTable() {
         }
         setSelected([]);
     };
+    // deleteOnClick(){
 
+    // }
     const handleClick = (event, name) => {
         const selectedIndex = selected.indexOf(name);
         let newSelected = [];
-
+        console.log(selected);
         if (selectedIndex === -1) {
             newSelected = newSelected.concat(selected, name);
         } else if (selectedIndex === 0) {
