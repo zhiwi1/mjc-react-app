@@ -1,9 +1,8 @@
-import axios from "axios";
 import axiosInstance from "../security/requestInterceptor";
 function isEmpty(str) {
     return (!str || str.length === 0);
 }
-export  function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
+export async function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
     let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
 
     if (!isEmpty(name)) {
@@ -16,9 +15,8 @@ export  function findAllCertificates(page, size, name = null, description = null
         apiUrl += `&tagNames=${tagNames}`
     }
 
-    const response = axios.get(apiUrl);
-    console.log(response.data);
-    return response.data;
+    const response = await fetch(apiUrl);
+    return response.json();
 }
 const deleteCertificate = (id) => {
 
@@ -39,6 +37,7 @@ const editCertificate = (id) => {
             handleClose();
             window.location.reload();
         });
+
 }
 // async function deleteCertificate(){
 //     axiosPost(result) {

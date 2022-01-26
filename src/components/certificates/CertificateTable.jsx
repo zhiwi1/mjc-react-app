@@ -21,16 +21,54 @@ import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { findAllCertificates } from "./CertificateRequest"
-const rows = [];
-const loadCertificates = () => {
-    const response = findAllCertificates(0, 5);
-    console.log(response);
-    showCertificates(response);
+import axiosInstance from '../security/requestInterceptor';
+import { async } from 'regenerator-runtime';
+import axios from "axios";
+let rows = [];
+// React.useEffect(() => {
+//     axios.get(`https://localhost:8443/v3/certificates/count`)
+//         .then(res => {
+//             const countofCertificates = res.data;
+//             setCount(  countofCertificates);
+//         })
+// },[]
+// )
+
+function isEmpty(str) {
+    return (!str || str.length === 0);
+}
+function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
+    let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
+
+    if (!isEmpty(name)) {
+        apiUrl += `&name=${name}`
+    }
+    if (!isEmpty(description)) {
+        apiUrl += `&description=${description}`
+    }
+    if (!isEmpty(tagNames)) {
+        apiUrl += `&tagNames=${tagNames}`
+    }
+
+    axios.get(apiUrl)
+        .then((response) => {
+            showCertificates(response.data);
+        })
 
 }
-const showCertificates = (certificates) => {
+const loadCertificates = (page, size) => {
+    try {
+        // rows = [];
+        findAllCertificates(page, size);
 
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+
+const showCertificates = (certificates) => {
+    console.log(certificates);
     certificates.forEach((certificate) => {
 
         const row = createData(certificate.name, certificate.create_date, certificate.description, certificate.description, certificate.price);
@@ -40,7 +78,7 @@ const showCertificates = (certificates) => {
     console.log(rows);
     return rows;
 };
-loadCertificates();
+
 
 function createData(name, datetime, tags, description, price) {
     return {
@@ -116,12 +154,7 @@ const headCells = [
         disablePadding: false,
         label: 'Price',
     },
-    {
-        id: 'action',
-        numeric: true,
-        disablePadding: false,
-        label: 'Actions',
-    },
+
 ];
 
 function EnhancedTableHead(props) {
@@ -131,6 +164,7 @@ function EnhancedTableHead(props) {
     const createSortHandler = (property) => (event) => {
         onRequestSort(event, property);
     };
+
 
     return (
         <TableHead>
@@ -180,7 +214,16 @@ EnhancedTableHead.propTypes = {
     orderBy: PropTypes.string.isRequired,
     rowCount: PropTypes.number.isRequired,
 };
+const deleteCertificates = (selected) => {
+    console.log(selected);
+    axiosInstance
+        .delete(`https://localhost:8443/v3/certificates/delete`, { data: selected })
+        .then((response) => {
+            //todo 
+            window.location.reload();
+        });
 
+}
 const EnhancedTableToolbar = (props) => {
     const { numSelected } = props;
 
@@ -217,7 +260,7 @@ const EnhancedTableToolbar = (props) => {
 
             {numSelected > 0 ? (
                 <Tooltip title="Delete">
-                    <IconButton>
+                    <IconButton onClick={() => { deleteCertificates(props.selected); }} >
                         <DeleteIcon />
                     </IconButton>
                 </Tooltip>
@@ -244,7 +287,24 @@ export default function EnhancedTable() {
     const [page, setPage] = React.useState(0);
     const [dense, setDense] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const [count, setCount] = React.useState(0);
 
+
+React.useEffect(()=>{
+    rows = [];
+    for (let i = 0; i <= page; i++) {
+        loadCertificates(i, count);
+    }
+})
+    React.useEffect(() => {
+        loadCertificates(0, 5);
+        axios.get(`https://localhost:8443/v3/certificates/count`)
+            .then(res => {
+                const countofCertificates = res.data;
+                setCount(countofCertificates);
+            })
+    }, []
+    )
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
@@ -259,13 +319,11 @@ export default function EnhancedTable() {
         }
         setSelected([]);
     };
-    // deleteOnClick(){
 
-    // }
     const handleClick = (event, name) => {
         const selectedIndex = selected.indexOf(name);
         let newSelected = [];
-        console.log(selected);
+
         if (selectedIndex === -1) {
             newSelected = newSelected.concat(selected, name);
         } else if (selectedIndex === 0) {
@@ -278,18 +336,27 @@ export default function EnhancedTable() {
                 selected.slice(selectedIndex + 1),
             );
         }
-
+        console.log(newSelected);
         setSelected(newSelected);
     };
 
     const handleChangePage = (event, newPage) => {
+
         setPage(newPage);
+        // rows=[];
+        // rows = [];
+        // for (let i = 0; i <= page; i++) {
+        //     loadCertificates(i, count);
+        // }
     };
 
     const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
+        let count = parseInt(event.target.value, 10)
+        setRowsPerPage(count);
         setPage(0);
+       
     };
+
 
     const handleChangeDense = (event) => {
         setDense(event.target.checked);
@@ -304,7 +371,7 @@ export default function EnhancedTable() {
     return (
         <Box sx={{ width: '100%' }}>
             <Paper sx={{ width: '100%', mb: 2 }}>
-                <EnhancedTableToolbar numSelected={selected.length} />
+                <EnhancedTableToolbar numSelected={selected.length} selected={selected} />//props selected +очистка пропсов
                 <TableContainer>
                     <Table
                         sx={{ minWidth: 750 }}
@@ -378,7 +445,7 @@ export default function EnhancedTable() {
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
                     component="div"
-                    count={rows.length}
+                    count={count}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}
