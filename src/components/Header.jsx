@@ -3,7 +3,7 @@ import { Box, Link, Stack, Typography,Button } from "@mui/material";
 import AddCertificateModal from "./certificates/CertificateModalWindow";
 import Keycloak from "keycloak-js";
 import { useSelector, useDispatch } from "react-redux";
-
+import CertificateSearch from './certificates/CertificateSearch';
 export default function Header() {
     const [details, setDetails] = useState({ keycloak: null, authenticated: false });
     const [open, setOpen] = React.useState(false);
@@ -34,6 +34,7 @@ export default function Header() {
                     justifyContent: "space-between",
                 }}
             >
+            
                 <Stack
                     justifyContent="flex-start"
                     direction="row"
@@ -43,7 +44,7 @@ export default function Header() {
                     <Typography variant="h5" color="white">
                         LOGO
                     </Typography>
-                    <AddCertificateModal/>
+                    <AddCertificateModal flag={true}/>
                 </Stack>
               
                     

@@ -19,11 +19,24 @@ import Tooltip from '@mui/material/Tooltip';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import AddCertificateModal from "./CertificateModalWindow";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import axiosInstance from '../security/requestInterceptor';
 import { async } from 'regenerator-runtime';
 import axios from "axios";
+import AlertDialogSlide from "./ConfirmationModalWindow";
+
+
+import InputBase from '@mui/material/InputBase';
+import Divider from '@mui/material/Divider';
+
+import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
+import DirectionsIcon from '@mui/icons-material/Directions';
+
+
 let rows = [];
 // React.useEffect(() => {
 //     axios.get(`https://localhost:8443/v3/certificates/count`)
@@ -33,11 +46,58 @@ let rows = [];
 //         })
 // },[]
 // )
+function CertificateSearch() {
+    const [value, setValue] = React.useState()
+    const handleSearch = (event) => { // changed the "handleSearch()" function
+        localStorage.setItem("text", value);
+        console.log(value);
+    }
+    return (
+        <Paper
+            component="form"
+            sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400 }}
+        >
+            <InputBase
+                sx={{ ml: 1, flex: 1 }}
+                placeholder="Search row"
+                inputProps={{ 'aria-label': 'search google maps' }}
+                onChange={event => {                                 //adding the onChange event
+                    setValue(event.target.value)
+                }}
+            />
+            <IconButton type="submit" sx={{ p: '10px' }} aria-label="search" onClick={handleSearch}>
+                <SearchIcon />
+            </IconButton>
+
+        </Paper>
+    );
+};
 
 function isEmpty(str) {
     return (!str || str.length === 0);
 }
+function findCriteria(text) {
+
+}
 function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
+    // let text = localStorage.getItem('text');
+
+
+    // console.log(1);
+    // let firstSymbol = text.charAt(0);
+    // if (firstSymbol == '!') {
+    //     description = text.substring(1, text.length);
+    // } else if (firstSymbol == '#') {
+    //     tagNames = text.split('#');
+    // }
+    // else if (firstSymbol) {
+    //     name = text;
+    // }
+
+    // } else {
+    //     name = text;
+    // }
+
     let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
 
     if (!isEmpty(name)) {
@@ -46,10 +106,14 @@ function findAllCertificates(page, size, name = null, description = null, tagNam
     if (!isEmpty(description)) {
         apiUrl += `&description=${description}`
     }
-    if (!isEmpty(tagNames)) {
-        apiUrl += `&tagNames=${tagNames}`
-    }
 
+    if (!isEmpty(tagNames)) {
+        for (let i = 0; i < tagNames.length; i++) {
+            let tagName = tagNames[i];
+            apiUrl += `&tagNames=${tagName}`
+        }
+    }
+    console.log(apiUrl);
     axios.get(apiUrl)
         .then((response) => {
             showCertificates(response.data);
@@ -68,11 +132,14 @@ const loadCertificates = (page, size) => {
 
 
 const showCertificates = (certificates) => {
-    console.log(certificates);
+    localStorage.setItem('certificates', certificates);
     certificates.forEach((certificate) => {
+        let tagsFormatString = '';
+        certificate.tags.forEach((tag) => {
+            tagsFormatString += (tag.name + ' ');
+        });
+        const row = createData(certificate.id, certificate.name, certificate.create_date, tagsFormatString, certificate.description, certificate.price, certificate.duration);
 
-        const row = createData(certificate.name, certificate.create_date, certificate.description, certificate.description, certificate.price);
-        console.log(row);
         rows.push(row);
     });
     console.log(rows);
@@ -80,19 +147,18 @@ const showCertificates = (certificates) => {
 };
 
 
-function createData(name, datetime, tags, description, price) {
+function createData(id, name, datetime, tags, description, price, duration) {
     return {
+        id,
         name,
         datetime,
         tags,
         description,
         price,
+        duration
     };
 }
 
-
-
-console.log(rows);
 function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) {
         return -1;
@@ -154,6 +220,12 @@ const headCells = [
         disablePadding: false,
         label: 'Price',
     },
+    {
+        id: 'duration',
+        numeric: true,
+        disablePadding: false,
+        label: 'Duration',
+    },
 
 ];
 
@@ -214,18 +286,32 @@ EnhancedTableHead.propTypes = {
     orderBy: PropTypes.string.isRequired,
     rowCount: PropTypes.number.isRequired,
 };
-const deleteCertificates = (selected) => {
-    console.log(selected);
+
+const createCertificate = (result) => {
+
     axiosInstance
-        .delete(`https://localhost:8443/v3/certificates/delete`, { data: selected })
+        .post("https://localhost:8443/v3/certificates", result)
         .then((response) => {
-            //todo 
+            console.log(response.data.id + 'resp');
+            const tagDtos = tags.map((value) => {
+                delete value.id;
+                return value.text;
+            });
+            console.log(tagDtos)
+            axiosInstance
+                .post(`https://localhost:8443/v3/tags/create/${response.data.id}`, tagDtos)
+            handleClose();
             window.location.reload();
         });
 
 }
+
 const EnhancedTableToolbar = (props) => {
     const { numSelected } = props;
+    const [certificates, setCertificates] = React.useState([]);
+    React.useEffect(() => {
+        setCertificates(localStorage.getItem('certificates'));
+    }, [])
 
     return (
         <Toolbar
@@ -257,19 +343,17 @@ const EnhancedTableToolbar = (props) => {
                     Nutrition
                 </Typography>
             )}
-
-            {numSelected > 0 ? (
-                <Tooltip title="Delete">
-                    <IconButton onClick={() => { deleteCertificates(props.selected); }} >
-                        <DeleteIcon />
-                    </IconButton>
-                </Tooltip>
+            {numSelected == 1 ? (
+                <AddCertificateModal flag={false} certs={certificates} name={props.selected} rows={rows} />
             ) : (
-                <Tooltip title="Filter list">
-                    <IconButton>
-                        <FilterListIcon />
-                    </IconButton>
-                </Tooltip>
+                <div></div>
+            )}
+            {numSelected > 0 ? (
+           
+                   < AlertDialogSlide selected={props.selected}/>
+                      
+            ) : (
+                <div></div>
             )}
         </Toolbar>
     );
@@ -290,12 +374,12 @@ export default function EnhancedTable() {
     const [count, setCount] = React.useState(0);
 
 
-React.useEffect(()=>{
-    rows = [];
-    for (let i = 0; i <= page; i++) {
-        loadCertificates(i, count);
-    }
-})
+    React.useEffect(() => {
+        rows = [];
+        for (let i = 0; i <= page; i++) {
+            loadCertificates(i, count);
+        }
+    })
     React.useEffect(() => {
         loadCertificates(0, 5);
         axios.get(`https://localhost:8443/v3/certificates/count`)
@@ -354,7 +438,7 @@ React.useEffect(()=>{
         let count = parseInt(event.target.value, 10)
         setRowsPerPage(count);
         setPage(0);
-       
+
     };
 
 
@@ -369,9 +453,11 @@ React.useEffect(()=>{
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
     return (
+
         <Box sx={{ width: '100%' }}>
+            <CertificateSearch />
             <Paper sx={{ width: '100%', mb: 2 }}>
-                <EnhancedTableToolbar numSelected={selected.length} selected={selected} />//props selected +очистка пропсов
+                <EnhancedTableToolbar numSelected={selected.length} selected={selected} />
                 <TableContainer>
                     <Table
                         sx={{ minWidth: 750 }}
@@ -426,7 +512,7 @@ React.useEffect(()=>{
                                             <TableCell align="right">{row.tags}</TableCell>
                                             <TableCell align="right">{row.description}</TableCell>
                                             <TableCell align="right">{row.price}</TableCell>
-                                            <TableCell align="right"></TableCell>
+                                            <TableCell align="right">{row.duration}</TableCell>
                                         </TableRow>
                                     );
                                 })}

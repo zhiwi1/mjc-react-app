@@ -2,8 +2,8 @@
 import ReactDOM from "react-dom";
 import "./index.css";
 import React from "react";
-import {NotFound}  from "../src/components/NotFound"
-import {BrowserRouter, Route, Routes, Redirect} from "react-router-dom";
+import { NotFound } from "../src/components/NotFound"
+import { BrowserRouter, Route, Routes, Redirect } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import CertificateTable from "./components/certificates/CertificateTable"
@@ -43,50 +43,50 @@ import axiosInstance from "./components/security/requestInterceptor";
 // export default App;
 
 const App = () => {
-    // const dispatch = useDispatch()
-    // const count = useSelector(state => state.repos.count)
+  // const dispatch = useDispatch()
+  // const count = useSelector(state => state.repos.count)
 
-    // function onCountClick() {
-    //     dispatch(setCount(5))
-    // }
-    
-    return (
-<React.StrictMode>
-    {/* <Provider store={store}> */}
+  // function onCountClick() {
+  //     dispatch(setCount(5))
+  // }
+
+  return (
+    <React.StrictMode>
+      {/* <Provider store={store}> */}
       <BrowserRouter>
         <Header />
         <Routes>
           <Route path="/login" element={<div>Hello</div>}>
             {/* <div>Hello</div> */}
           </Route>
-          <Route path="/" element={  <StyledEngineProvider injectFirst>
-    <CertificateTable />
-  </StyledEngineProvider>}>
+          <Route path="/" element={<StyledEngineProvider injectFirst>
+            <CertificateTable />
+          </StyledEngineProvider>}>
             {/* <App /> */}
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
       </BrowserRouter>
-    {/* </Provider> */}
-  </React.StrictMode>
-//       <BrowserRouter>
-//       <div className="container">
-//        <Switch>
-//                <Route exact path="/" component={Main}/>
-//            <Route path="/card" component={Card}/>
-//                <Redirect to="/"/>
-//           </Switch>
-//       </div>
-//  </BrowserRouter>
-        // <div className="app">
-        //     <button onClick={()=>onCountClick()}>COUNT</button>
-        //     <div>{count}</div>
-        // </div>
-    );
+      {/* </Provider> */}
+    </React.StrictMode>
+    //       <BrowserRouter>
+    //       <div className="container">
+    //        <Switch>
+    //                <Route exact path="/" component={Main}/>
+    //            <Route path="/card" component={Card}/>
+    //                <Redirect to="/"/>
+    //           </Switch>
+    //       </div>
+    //  </BrowserRouter>
+    // <div className="app">
+    //     <button onClick={()=>onCountClick()}>COUNT</button>
+    //     <div>{count}</div>
+    // </div>
+  );
 };
 
 export default App;
 
 
-    
+
