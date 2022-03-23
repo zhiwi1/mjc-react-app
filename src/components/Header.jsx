@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Box, Link, Stack, Typography,Button } from "@mui/material";
+import { Box, Link, Stack, Typography, Button } from "@mui/material";
 import AddCertificateModal from "./certificates/CertificateModalWindow";
 import Keycloak from "keycloak-js";
-import { useSelector, useDispatch } from "react-redux";
-import CertificateSearch from './certificates/CertificateSearch';
 export default function Header() {
     const [details, setDetails] = useState({ keycloak: null, authenticated: false });
-    const [open, setOpen] = React.useState(false);
-    const handleOpen = () => {
-      setOpen(true);
-    };
-    const handleClose = () => {
-        setOpen(false);
-      };
-    
+
     useEffect(() => {
         const keycloak = Keycloak("keycloak.json");
         keycloak.init({ onLoad: "check-sso" }).then((authenticated) => {
@@ -34,7 +25,6 @@ export default function Header() {
                     justifyContent: "space-between",
                 }}
             >
-            
                 <Stack
                     justifyContent="flex-start"
                     direction="row"
@@ -44,12 +34,8 @@ export default function Header() {
                     <Typography variant="h5" color="white">
                         LOGO
                     </Typography>
-                    <AddCertificateModal flag={true}/>
+                    <AddCertificateModal flag={true} />
                 </Stack>
-              
-                    
-                   
-             
                 {details.authenticated ? (
                     <Stack
                         direction="row"

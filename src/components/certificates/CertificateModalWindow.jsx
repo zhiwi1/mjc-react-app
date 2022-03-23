@@ -6,6 +6,11 @@ import { WithContext as ReactTags } from 'react-tag-input';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import EditIcon from '@mui/icons-material/Edit';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+    loadAll, selectStatusOfError, setStatus, setFlagOfError, setSelected
+} from '../../reducers/certificateSlice';
+import axios from 'axios';
 const style = {
     position: 'absolute',
     top: '50%',
@@ -22,10 +27,11 @@ export default function AddCertificateModal(props) {
 
     const [open, setOpen] = React.useState(false);
     const [certificate, setCertificate] = React.useState({ name: '', description: '', duration: '', price: '', tags: '' });
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
 
-
+    const handleOpen = () => { setOpen(true); }
+    const handleClose = () => { setOpen(false); dispatch(setSelected([])); }
+    const dispatch = useDispatch();
+    const mounted = React.useRef();
 
 
     const suggestions = [
@@ -34,12 +40,7 @@ export default function AddCertificateModal(props) {
         { id: "3", text: "orange" },
         { id: "4", text: "pear" }
     ];
-    // const suggestions = COUNTRIES.map(country => {
-    //     return {
-    //         id: country,
-    //         text: country
-    //     };
-    // });
+
 
     const KeyCodes = {
         comma: 188,
@@ -85,18 +86,18 @@ export default function AddCertificateModal(props) {
         if (!props.flag) {
             props.rows.forEach((row) => {
                 if (name == row.name) {
-                    console.log('find');
-                    console.log(row.id);
+                    
+                    
                     id = row.id;
                 }
             })
         } return id;
     }
     const handleTagClick = index => {
-        console.log('The tag at index ' + index + ' was clicked');
+        
     };
     const createFormatTags = (tags) => {
-        console.log(props.id + 'imhereeeeeeeeeeeeeeeeeeeeee');
+        
         let formatTags = [];
         tags.forEach((tag) => {
             if (tag != '') {
@@ -107,39 +108,59 @@ export default function AddCertificateModal(props) {
         return formatTags;
     };
     React.useEffect(() => {
-        if (!props.flag) {
-            props.rows.forEach((row) => {
-                if (row.name == props.name) {
-                    setCertificate(row);
-                    var space = ' ';
-                    let tags = row.tags.split(space);
-                    let formatTags = createFormatTags(tags);
-                    setTags(formatTags);
-                    // setCertificate({ ...certificate, tags: formatTags })
-
-                }
-            })
-        }
-
-    }, []);
-
+        if (!mounted.current) {
+            if (!props.flag) {
+                props.rows.forEach((row) => {
+                    if (row.name == props.name) {
+                        setCertificate(row);
+                        var space = ' ';
+                        let tags = row.tags.split(space);
+                        let formatTags = createFormatTags(tags);
+                        setTags(formatTags);
+                    }
+                })
+            }
+            mounted.current = true;
+        } 
+    });
     const editCertificate = (result) => {
+
         let id = findIdOfCertificateByName(props.name)
-        console.log(id + 'id');
+        
         axiosInstance
             .patch(`https://localhost:8443/v3/certificates/${id}`, result)
             .then((response) => {
-                console.log(response.data.id + 'resp');
+                
                 const tagDtos = tags.map((value) => {
                     delete value.id;
                     return value.text;
                 });
-                console.log(tagDtos)
+                
                 axiosInstance
                     .post(`https://localhost:8443/v3/tags/create/${response.data.id}`, tagDtos)
+                    .catch(function (error) {
+                        if (error.response) {
+                            
+                        }
+                    });
+
                 handleClose();
-                window.location.reload();
+
+            }).catch(error => {
+
+                dispatch(setFlagOfError(true))
+                if (error.response) {
+                    dispatch(setStatus(error.response.status))
+                    
+
+
+
+                } else { dispatch(setStatus(401)); }
+                handleClose();
+
             });
+
+        setTimeout(() => { findAllCertificates(0, 100) }, 1000);;
 
     }
 
@@ -149,18 +170,96 @@ export default function AddCertificateModal(props) {
         axiosInstance
             .post("https://localhost:8443/v3/certificates", result)
             .then((response) => {
-                console.log(response.data.id + 'resp');
+                
                 const tagDtos = tags.map((value) => {
                     delete value.id;
                     return value.text;
                 });
-                console.log(tagDtos)
+                
                 axiosInstance
                     .post(`https://localhost:8443/v3/tags/create/${response.data.id}`, tagDtos)
-                handleClose();
-                window.location.reload();
-            });
 
+
+                handleClose();
+            }).catch(error => {
+
+                dispatch(setFlagOfError(true))
+                if (error.response) {
+                    dispatch(setStatus(error.response.status))
+                    
+                    handleClose();
+
+                } else dispatch(setStatus(401));
+            });
+        
+        setTimeout(() => { findAllCertificates(0, 100) }, 1000);;
+    }
+    function isEmpty(str) {
+        return (!str || str.length === 0);
+    }
+
+    function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
+        let answer = [];
+
+        let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
+
+        if (!isEmpty(name)) {
+            apiUrl += `&name=${name}`
+        }
+        if (!isEmpty(description)) {
+            apiUrl += `&description=${description}`
+        }
+
+        if (!isEmpty(tagNames)) {
+            for (let i = 0; i < tagNames.length; i++) {
+                let tagName = tagNames[i];
+                apiUrl += `&tagNames=${tagName}`
+            }
+        }
+        
+        axios.get(apiUrl)
+            .then((response) => {
+                answer = showCertificates(response.data)
+
+            }).catch(function (error) {
+                if (error.response) {
+
+                    
+
+                }
+            });
+        return (answer);
+    }
+
+
+
+
+    function showCertificates(certificates) {
+        let rs = [];
+        certificates.forEach((certificate) => {
+            
+            let tagsFormatString = '';
+            certificate.tags.forEach((tag) => {
+                tagsFormatString += (tag.name + ' ');
+            });
+            const row = createData(certificate.id, certificate.name, certificate.create_date, tagsFormatString, certificate.description, certificate.price, certificate.duration);
+            
+            rs.push(row);
+
+        });
+        dispatch(loadAll(rs));
+        return rows;
+    };
+    function createData(id, name, datetime, tags, description, price, duration) {
+        return {
+            id,
+            name,
+            datetime,
+            tags,
+            description,
+            price,
+            duration
+        };
     }
     return (
         <div>
@@ -197,16 +296,12 @@ export default function AddCertificateModal(props) {
                     </Typography>
                     <ValidatorForm
                         onSubmit={(e) => {
-                            // const tags = certificate.tags.map((value) => {
-                            //     delete value.id;
-                            //     return value;
-                            // });
+
                             const result = {
                                 name: certificate.name,
                                 description: certificate.description,
                                 duration: certificate.duration,
                                 price: certificate.price,
-                                // tags: tags,
                             };
                             props.flag ? createCertificate(result) : editCertificate(result);
 

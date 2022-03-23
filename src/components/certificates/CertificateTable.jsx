@@ -15,42 +15,115 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import AddCertificateModal from "./CertificateModalWindow";
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import axiosInstance from '../security/requestInterceptor';
-import { async } from 'regenerator-runtime';
 import axios from "axios";
 import AlertDialogSlide from "./ConfirmationModalWindow";
-
-
+import { useSearchParams } from "react-router-dom";
 import InputBase from '@mui/material/InputBase';
-import Divider from '@mui/material/Divider';
-
-import MenuIcon from '@mui/icons-material/Menu';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+    loadAll, setSelected, selectFlagOfError, selectRows, selectSelected
+} from '../../reducers/certificateSlice';
 import SearchIcon from '@mui/icons-material/Search';
-import DirectionsIcon from '@mui/icons-material/Directions';
+import ErrorAlert from '../error/ErrorComponent';
 
 
-let rows = [];
-// React.useEffect(() => {
-//     axios.get(`https://localhost:8443/v3/certificates/count`)
-//         .then(res => {
-//             const countofCertificates = res.data;
-//             setCount(  countofCertificates);
-//         })
-// },[]
-// )
 function CertificateSearch() {
-    const [value, setValue] = React.useState()
-    const handleSearch = (event) => { // changed the "handleSearch()" function
-        localStorage.setItem("text", value);
-        console.log(value);
+    const [value, setValue] = React.useState();
+    const rows = useSelector(selectRows);
+    const dispatch = useDispatch();
+    function findByCriteria(text) {
+        let firstSymbol = text.charAt(0);
+        switch (firstSymbol) {
+            case '!': {
+                let description = text.substring(1, text.length);
+                findAllCertificates(0, 100, null, description);
+                break;
+            }
+            case '#': {
+                let tagNames = text.split('#');
+                let realTags = [];
+                for (let i = 1; i < tagNames.length; i++) {
+                    realTags.push(tagNames[i].slice());
+                }
+                findAllCertificates(0, 100, null, null, realTags);
+                break
+            }
+            default: {
+                findAllCertificates(0, 100, text);
+                break;
+            }
+        }
+        function isEmpty(str) {
+            return (!str || str.length === 0);
+        }
+
+        function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
+            let answer = [];
+
+            let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
+
+            if (!isEmpty(name)) {
+                apiUrl += `&name=${name}`
+            }
+            if (!isEmpty(description)) {
+                apiUrl += `&description=${description}`
+            }
+
+            if (!isEmpty(tagNames)) {
+                for (let i = 0; i < tagNames.length; i++) {
+                    let tagName = tagNames[i];
+                    apiUrl += `&tagNames=${tagName}`
+                }
+            }
+            axios.get(apiUrl)
+                .then((response) => {
+                    answer = showCertificates(response.data)
+                }).catch(function (error) {
+                    if (error.response) {
+                        console.warn(response.status);
+                    }
+                });
+            return (answer);
+        }
+
+        function showCertificates(certificates) {
+            let rs = [];
+            certificates.forEach((certificate) => {
+
+                let tagsFormatString = '';
+                certificate.tags.forEach((tag) => {
+                    tagsFormatString += (tag.name + ' ');
+                });
+                const row = createData(certificate.id, certificate.name, certificate.create_date, tagsFormatString, certificate.description, certificate.price, certificate.duration);
+
+                rs.push(row);
+
+            }
+            );
+            dispatch(loadAll(rs));
+            return rows;
+        };
+
+        function createData(id, name, datetime, tags, description, price, duration) {
+            return {
+                id,
+                name,
+                datetime,
+                tags,
+                description,
+                price,
+                duration
+            };
+        }
+    }
+    const handleSearch = (event) => {
+        const params = new URLSearchParams();
+        params.append("text", value);
+        findByCriteria(value);
     }
     return (
         <Paper
@@ -61,103 +134,18 @@ function CertificateSearch() {
                 sx={{ ml: 1, flex: 1 }}
                 placeholder="Search row"
                 inputProps={{ 'aria-label': 'search google maps' }}
-                onChange={event => {                                 //adding the onChange event
+                onChange={event => {
                     setValue(event.target.value)
                 }}
             />
-            <IconButton type="submit" sx={{ p: '10px' }} aria-label="search" onClick={handleSearch}>
+            <IconButton sx={{ p: '10px' }} aria-label="search" onClick={handleSearch}>
                 <SearchIcon />
             </IconButton>
-
         </Paper>
     );
 };
 
-function isEmpty(str) {
-    return (!str || str.length === 0);
-}
-function findCriteria(text) {
 
-}
-function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
-    // let text = localStorage.getItem('text');
-
-
-    // console.log(1);
-    // let firstSymbol = text.charAt(0);
-    // if (firstSymbol == '!') {
-    //     description = text.substring(1, text.length);
-    // } else if (firstSymbol == '#') {
-    //     tagNames = text.split('#');
-    // }
-    // else if (firstSymbol) {
-    //     name = text;
-    // }
-
-    // } else {
-    //     name = text;
-    // }
-
-    let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
-
-    if (!isEmpty(name)) {
-        apiUrl += `&name=${name}`
-    }
-    if (!isEmpty(description)) {
-        apiUrl += `&description=${description}`
-    }
-
-    if (!isEmpty(tagNames)) {
-        for (let i = 0; i < tagNames.length; i++) {
-            let tagName = tagNames[i];
-            apiUrl += `&tagNames=${tagName}`
-        }
-    }
-    console.log(apiUrl);
-    axios.get(apiUrl)
-        .then((response) => {
-            showCertificates(response.data);
-        })
-
-}
-const loadCertificates = (page, size) => {
-    try {
-        // rows = [];
-        findAllCertificates(page, size);
-
-    } catch (error) {
-        console.log(error.message);
-    }
-}
-
-
-const showCertificates = (certificates) => {
-    localStorage.setItem('certificates', certificates);
-    certificates.forEach((certificate) => {
-        let tagsFormatString = '';
-        certificate.tags.forEach((tag) => {
-            tagsFormatString += (tag.name + ' ');
-        });
-        const row = createData(certificate.id, certificate.name, certificate.create_date, tagsFormatString, certificate.description, certificate.price, certificate.duration);
-
-        rows.push(row);
-    });
-    console.log(rows);
-    return rows;
-};
-
-
-function createData(id, name, datetime, tags, description, price, duration) {
-    return {
-        id,
-        name,
-        datetime,
-        tags,
-        description,
-        price,
-        duration
-    };
-}
 
 function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) {
@@ -174,9 +162,6 @@ function getComparator(order, orderBy) {
         ? (a, b) => descendingComparator(a, b, orderBy)
         : (a, b) => -descendingComparator(a, b, orderBy);
 }
-
-// This method is created for cross-browser compatibility, if you don't
-// need to support IE11, you can use Array.prototype.sort() directly
 function stableSort(array, comparator) {
     const stabilizedThis = array.map((el, index) => [el, index]);
     stabilizedThis.sort((a, b) => {
@@ -191,10 +176,10 @@ function stableSort(array, comparator) {
 
 const headCells = [
     {
-        id: 'title',
+        id: 'name',
         numeric: false,
-        disablePadding: true,
-        label: 'Title',
+        disablePadding: false,
+        label: 'Name',
     },
     {
         id: 'datetime',
@@ -287,31 +272,11 @@ EnhancedTableHead.propTypes = {
     rowCount: PropTypes.number.isRequired,
 };
 
-const createCertificate = (result) => {
 
-    axiosInstance
-        .post("https://localhost:8443/v3/certificates", result)
-        .then((response) => {
-            console.log(response.data.id + 'resp');
-            const tagDtos = tags.map((value) => {
-                delete value.id;
-                return value.text;
-            });
-            console.log(tagDtos)
-            axiosInstance
-                .post(`https://localhost:8443/v3/tags/create/${response.data.id}`, tagDtos)
-            handleClose();
-            window.location.reload();
-        });
-
-}
 
 const EnhancedTableToolbar = (props) => {
     const { numSelected } = props;
-    const [certificates, setCertificates] = React.useState([]);
-    React.useEffect(() => {
-        setCertificates(localStorage.getItem('certificates'));
-    }, [])
+
 
     return (
         <Toolbar
@@ -344,14 +309,14 @@ const EnhancedTableToolbar = (props) => {
                 </Typography>
             )}
             {numSelected == 1 ? (
-                <AddCertificateModal flag={false} certs={certificates} name={props.selected} rows={rows} />
+                <AddCertificateModal flag={false} name={props.selected} rows={props.rows} />
             ) : (
                 <div></div>
             )}
             {numSelected > 0 ? (
-           
-                   < AlertDialogSlide selected={props.selected}/>
-                      
+
+                < AlertDialogSlide selected={props.selected} />
+
             ) : (
                 <div></div>
             )}
@@ -364,31 +329,121 @@ EnhancedTableToolbar.propTypes = {
 };
 
 export default function EnhancedTable() {
-
     const [order, setOrder] = React.useState('asc');
     const [orderBy, setOrderBy] = React.useState('calories');
-    const [selected, setSelected] = React.useState([]);
     const [page, setPage] = React.useState(0);
     const [dense, setDense] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
     const [count, setCount] = React.useState(0);
+    const [status, setStatus] = React.useState(200);
+    const flagOfError = useSelector(selectFlagOfError);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const mounted = React.useRef();
+    const rows = useSelector(selectRows);
+    const selected = useSelector(selectSelected);
+    const dispatch = useDispatch();
 
-
-    React.useEffect(() => {
-        rows = [];
-        for (let i = 0; i <= page; i++) {
-            loadCertificates(i, count);
-        }
-    })
-    React.useEffect(() => {
-        loadCertificates(0, 5);
+    const findCount = () => {
         axios.get(`https://localhost:8443/v3/certificates/count`)
             .then(res => {
                 const countofCertificates = res.data;
+
                 setCount(countofCertificates);
             })
-    }, []
-    )
+    }
+
+    React.useEffect(() => {
+        if (!mounted.current) {
+
+            let text = searchParams.get('text');
+            if (!text) {
+                findAllCertificates(0, 100)
+            }
+
+
+            mounted.current = true;
+        } else {
+
+        }
+        findCount();
+    });
+
+    function isEmpty(str) {
+        return (!str || str.length === 0);
+    }
+
+    function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
+        let answer = [];
+
+        let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
+
+        if (!isEmpty(name)) {
+            apiUrl += `&name=${name}`
+        }
+        if (!isEmpty(description)) {
+            apiUrl += `&description=${description}`
+        }
+
+        if (!isEmpty(tagNames)) {
+            for (let i = 0; i < tagNames.length; i++) {
+                let tagName = tagNames[i];
+                apiUrl += `&tagNames=${tagName}`
+            }
+        }
+
+        axios.get(apiUrl)
+            .then((response) => {
+                answer = showCertificates(response.data)
+
+            }).catch(function (error) {
+                if (error.response) {
+
+
+
+                }
+            });
+        return (answer);
+    }
+    function loadCertificates(page, size) {
+        try {
+            findAllCertificates(page, size);
+
+        } catch (error) {
+
+        }
+    }
+
+
+
+    function showCertificates(certificates) {
+        let rs = [];
+        certificates.forEach((certificate) => {
+
+            let tagsFormatString = '';
+            certificate.tags.forEach((tag) => {
+                tagsFormatString += (tag.name + ' ');
+            });
+            const row = createData(certificate.id, certificate.name, certificate.create_date, tagsFormatString, certificate.description, certificate.price, certificate.duration);
+
+            rs.push(row);
+
+        }
+        );
+        dispatch(loadAll(rs));
+        return rows;
+    };
+
+    function createData(id, name, datetime, tags, description, price, duration) {
+        return {
+            id,
+            name,
+            datetime,
+            tags,
+            description,
+            price,
+            duration
+        };
+    }
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
@@ -398,10 +453,10 @@ export default function EnhancedTable() {
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
             const newSelecteds = rows.map((n) => n.name);
-            setSelected(newSelecteds);
+            dispatch(setSelected(newSelecteds));
             return;
         }
-        setSelected([]);
+        dispatch(setSelected([]));
     };
 
     const handleClick = (event, name) => {
@@ -420,18 +475,13 @@ export default function EnhancedTable() {
                 selected.slice(selectedIndex + 1),
             );
         }
-        console.log(newSelected);
-        setSelected(newSelected);
+
+
+        dispatch(setSelected(newSelected));
     };
 
     const handleChangePage = (event, newPage) => {
-
         setPage(newPage);
-        // rows=[];
-        // rows = [];
-        // for (let i = 0; i <= page; i++) {
-        //     loadCertificates(i, count);
-        // }
     };
 
     const handleChangeRowsPerPage = (event) => {
@@ -447,17 +497,16 @@ export default function EnhancedTable() {
     };
 
     const isSelected = (name) => selected.indexOf(name) !== -1;
-
-    // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
     return (
 
         <Box sx={{ width: '100%' }}>
+            <ErrorAlert flag={flagOfError} status={status} />
             <CertificateSearch />
             <Paper sx={{ width: '100%', mb: 2 }}>
-                <EnhancedTableToolbar numSelected={selected.length} selected={selected} />
+                <EnhancedTableToolbar numSelected={selected.length} selected={selected} rows={rows} />
                 <TableContainer>
                     <Table
                         sx={{ minWidth: 750 }}
@@ -473,8 +522,6 @@ export default function EnhancedTable() {
                             rowCount={rows.length}
                         />
                         <TableBody>
-                            {/* if you don't need to support IE11, you can replace the `stableSort` call with:
-                 rows.slice().sort(getComparator(order, orderBy)) */}
                             {stableSort(rows, getComparator(order, orderBy))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
@@ -531,11 +578,26 @@ export default function EnhancedTable() {
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
                     component="div"
-                    count={count}
+                    count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
+                    labelRowsPerPage={<span>Rows:</span>}
+                    labelDisplayedRows={({ page }) => {
+                        return `Page: ${page + 1}`;
+                    }}
+                    backIconButtonProps={{
+                        color: "secondary"
+                    }}
+                    nextIconButtonProps={{ color: "secondary" }}
+                    SelectProps={{
+                        inputProps: {
+                            "aria-label": "page number"
+                        }
+                    }}
+                    showFirstButton={true}
+                    showLastButton={true}
                 />
             </Paper>
             <FormControlLabel

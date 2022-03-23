@@ -1,9 +1,36 @@
-import axios from "axios";
 import axiosInstance from "../security/requestInterceptor";
+
 function isEmpty(str) {
     return (!str || str.length === 0);
 }
-export async function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
+function findByCriteria(text) {
+    let firstSymbol = text.charAt(0);
+    rows = [];
+    
+    switch (firstSymbol) {
+        case '!': {
+            let description = text.substring(1, text.length);
+            findAllCertificates(0, 100, null, description);
+            break;
+        }
+        case '#': {
+            let tagNames = text.split('#');
+            let realTags = [];
+            for (let i = 1; i < tagNames.length; i++) {
+                realTags.push(tagNames[i].slice());
+            }
+            findAllCertificates(0, 100, null, null, realTags);
+            break
+        }
+        default: {
+            findAllCertificates(0, 100, text);
+            break;
+        }
+    }
+}
+export function findAllCertificates(page, size, name = null, description = null, tagNames = null) {
+    let answer = [];
+
     let apiUrl = `https://localhost:8443/v3/certificates?page=${page}&size=${size}&sortType=DESC&orderType=CREATE_DATE`;
 
     if (!isEmpty(name)) {
@@ -12,44 +39,63 @@ export async function findAllCertificates(page, size, name = null, description =
     if (!isEmpty(description)) {
         apiUrl += `&description=${description}`
     }
+
     if (!isEmpty(tagNames)) {
-        apiUrl += `&tagNames=${tagNames}`
+        for (let i = 0; i < tagNames.length; i++) {
+            let tagName = tagNames[i];
+            apiUrl += `&tagNames=${tagName}`
+        }
     }
-
-    const response = await fetch(apiUrl);
-    return response.json();
-}
-
-const findCertificateByName=(name)=>{
-axiosInstance.get(`https://localhost:8443/v3/certificates/${id}`)
-.then((response)=>{
-
-})
-}
-const deleteCertificates=(names)=>{
- 
-}
-
-const editCertificate = (id) => {
-    axiosInstance
-        .put(`https://localhost:8443/v3/certificates/${id}`, result)
+    
+    axios.get(apiUrl)
         .then((response) => {
-          
-            handleClose();
-            window.location.reload();
+            answer = showCertificates(response.data)
+
+        }).catch(function (error) {
+            if (error.response) {
+
+                
+
+            }
         });
-
+    return (answer);
 }
-// async function deleteCertificate(){
-//     axiosPost(result) {
-//         axiosInstance
-//           .post("http://localhost:8080/application/v3/certificates", result)
-//           .then((response) => {
-//             this.setState({ isOpen: false });
-//             window.location.reload();
-//           });
-//       }
-// }
-// async function editCertificate(){
+export function loadCertificates(page, size) {
+    try {
+        findAllCertificates(page, size);
+    } catch (error) {
+        
+    }
+}
 
-// }
+
+
+function showCertificates(certificates) {
+    let rs = [];
+    certificates.forEach((certificate) => {
+        
+        let tagsFormatString = '';
+        certificate.tags.forEach((tag) => {
+            tagsFormatString += (tag.name + ' ');
+        });
+        const row = createData(certificate.id, certificate.name, certificate.create_date, tagsFormatString, certificate.description, certificate.price, certificate.duration);
+        
+        rs.push(row);
+
+    }
+    );
+    dispatch(loadAll(rs));
+    return rows;
+};
+
+function createData(id, name, datetime, tags, description, price, duration) {
+    return {
+        id,
+        name,
+        datetime,
+        tags,
+        description,
+        price,
+        duration
+    };
+}
